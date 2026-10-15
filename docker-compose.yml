@@ -1,0 +1,21 @@
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sprintboard
+      POSTGRES_USER: sprintboard
+      POSTGRES_PASSWORD: local_dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - sprintboard_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sprintboard -d sprintboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sprintboard_data:
