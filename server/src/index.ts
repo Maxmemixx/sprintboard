@@ -1,6 +1,7 @@
 
 import express from "express";
 import cors from "cors";
+import projectsRouter from "./routes/projects.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -14,6 +15,8 @@ app.get("/api/health", (_req, res) => {
     service: "sprintboard-api",
   });
 });
+
+app.use("/api/projects", projectsRouter);
 
 app.listen(port, () => {
   console.log(`API running at http://localhost:${port}`);
