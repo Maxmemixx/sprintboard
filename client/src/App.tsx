@@ -1,122 +1,154 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+import { createProject, getProjects } from "./api";
+import type { Project } from "./api";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        setError("");
+        const data = await getProjects();
+        setProjects(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Could not load projects.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadProjects();
+  }, []);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    try {
+      setCreating(true);
+      setError("");
+
+      const project = await createProject(name, description);
+
+      setProjects((currentProjects) => [project, ...currentProjects]);
+      setName("");
+      setDescription("");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not create project.",
+      );
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+    <main className="app">
+      <header className="topbar">
+        <a className="brand" href="/">
+          <span className="brand-mark">S</span>
+          SprintBoard
+        </a>
+        <span className="topbar-label">PROJECT WORKSPACE</span>
+      </header>
+
+      <section className="content">
+        <div className="page-heading">
+          <p className="eyebrow">YOUR WORKSPACE</p>
+          <h1>Projects</h1>
+          <p className="subtitle">
+            Organize your work and keep your team moving forward.
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+
+        <section className="panel">
+          <div className="panel-heading">
+            <div>
+              <h2>Create a project</h2>
+              <p>Start something new for your team.</p>
+            </div>
+          </div>
+
+          <form className="project-form" onSubmit={handleSubmit}>
+            <label htmlFor="project-name">Project name</label>
+            <input
+              id="project-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="e.g. Website redesign"
+              maxLength={120}
+              required
+            />
+
+            <label htmlFor="project-description">Description</label>
+            <textarea
+              id="project-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="What are you planning to accomplish?"
+              rows={3}
+              maxLength={5000}
+            />
+
+            {error && <p className="error-message">{error}</p>}
+
+            <div className="form-actions">
+              <button type="submit" disabled={creating || !name.trim()}>
+                {creating ? "Creating..." : "Create project"}
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section className="projects-section">
+          <div className="section-heading">
+            <div>
+              <h2>Your projects</h2>
+              <p>Projects available in your workspace.</p>
+            </div>
+            <span className="project-count">{projects.length}</span>
+          </div>
+
+          {loading ? (
+            <p className="state-message">Loading projects...</p>
+          ) : projects.length === 0 ? (
+            <div className="empty-state">
+              <h3>No projects yet</h3>
+              <p>Create your first project using the form above.</p>
+            </div>
+          ) : (
+            <div className="project-list">
+              {projects.map((project) => (
+                <article className="project-card" key={project.id}>
+                  <div className="project-icon">
+                    {project.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="project-details">
+                    <h3>{project.name}</h3>
+                    <p>
+                      {project.description?.trim() ||
+                        "No description provided."}
+                    </p>
+                  </div>
+                  <span className="project-status">Active</span>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    </main>
+  );
 }
 
-export default App
+export default App;
