@@ -307,4 +307,28 @@ h1 {
   .project-status {
     display: none;
   }
+
+  .project-card-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 28px;
+    color: #4263eb;
+    font-size: 14px;
+    font-weight: 650;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .project-id {
+    overflow-wrap: anywhere;
+    font-family: monospace;
+    font-size: 14px;
+  }
 }
