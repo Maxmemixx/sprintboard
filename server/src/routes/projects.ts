@@ -13,6 +13,35 @@ const createProjectSchema = z.object({
   description: z.string().trim().max(5000).optional(),
 });
 
+// GET for information about a specific project
+router.get("/:projectId", async (req, res) => {
+  const projectIdResult = z.string().uuid().safeParse(req.params.projectId);
+
+  if (!projectIdResult.success) {
+    res.status(400).json({ error: "Invalid project ID" });
+    return;
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, name, description, created_at, updated_at
+       FROM projects
+       WHERE id = $1`,
+      [projectIdResult.data],
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: "Project not found" });
+      return;
+    }
+
+    res.json({ project: result.rows[0] });
+  } catch (error) {
+    console.error("Failed to fetch project:", error);
+    res.status(500).json({ error: "Failed to fetch project" });
+  }
+});
+
 // GET /api/projects
 router.get("/", async (_req, res) => {
   try {
