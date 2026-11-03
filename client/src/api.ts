@@ -9,6 +9,21 @@ export interface Project {
   updated_at: string;
 }
 
+export interface Task {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: "BACKLOG" | "TODO" | "IN_PROGRESS" | "DONE";
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  due_date: string | null;
+  position: number;
+  creator_id: string;
+  assignee_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface ProjectsResponse {
   projects: Project[];
 }
@@ -47,6 +62,22 @@ export async function getProject(projectId: string): Promise<Project> {
 
   const data = (await response.json()) as ProjectResponse;
   return data.project;
+}
+
+export async function getProjectTasks(
+  projectId: string,
+): Promise<Task[]> {
+  const response = await fetch(
+    `${API_URL}/api/projects/${encodeURIComponent(projectId)}/tasks`,
+  );
+
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+
+  const data = (await response.json()) as { tasks: Task[] };
+
+  return data.tasks;
 }
 
 export async function createProject(
