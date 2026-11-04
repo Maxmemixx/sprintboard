@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getProject } from "../api";
-import type { Project } from "../api";
+import { getProject, getProjectTasks } from "../api";
+import type { Project, Task } from "../api";
 
 function ProjectDetailsPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -10,6 +10,8 @@ function ProjectDetailsPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
 
   useEffect(() => {
     if (!projectId) {
@@ -34,7 +36,19 @@ function ProjectDetailsPage() {
       }
     }
 
+    async function loadTasks() {
+      try {
+        const data = await getProjectTasks(id);
+        setTasks(data);
+      } catch (err) {
+        console.error("Failed to load tasks:", err);
+      } finally {
+        setTasksLoading(false);
+      }
+    }
+
     void loadProject();
+    void loadTasks();
   }, [projectId]);
 
   return (
@@ -66,11 +80,27 @@ function ProjectDetailsPage() {
               </p>
             </div>
 
-            <section className="panel">
+            <section className="tasks-section">
               <h2>Tasks</h2>
-              <p className="subtitle">
-                Task list.
-              </p>
+
+              {tasksLoading ? (
+                <p>Loading tasks...</p>
+              ) : tasks.length === 0 ? (
+                <p>No tasks yet.</p>
+              ) : (
+                <div className="tasks-list">
+                  {tasks.map((task) => (
+                    <article className="task-card" key={task.id}>
+                      <h3>{task.title}</h3>
+
+                      {task.description && <p>{task.description}</p>}
+
+                      <p>Status: {task.status.replace("_", " ")}</p>
+                      <p>Priority: {task.priority}</p>
+                    </article>
+                  ))}
+                </div>
+              )}
             </section>
           </>
         ) : null}
